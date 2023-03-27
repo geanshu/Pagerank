@@ -16,7 +16,7 @@ class Pagerank:
 
 
 if __name__ == '__main__':
-
+    p = Pagerank()
 
 
 
