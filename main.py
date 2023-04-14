@@ -40,6 +40,7 @@ class Pagerank:
     def cal_PR(self):
         for i in range(self.iter_num):
             self.PR_iter()
+            print("iter %3d finish" % i)
         self.out_res()
 
     def block_cal_PR(self):
@@ -48,16 +49,16 @@ class Pagerank:
             for j in range(math.ceil(self.N/self.block_size)):
                 start, end = j*self.block_size, min(self.N, (j+1)*self.block_size)
                 g = np.zeros((end-start, self.N), dtype=np.float64)
-                for num in range(end-start):
-                    l = self.in_degree[start+num]
-                    for node in l:
+                for num in range(start, end):
+                    for node in self.in_degree[num]:
                         idx_node = self.nodes.index(node)
-                        g[i, idx_node] = 1/self.V[idx_node]
-                if block_PR is None:
-                    block_PR = self.block_process(self.PR, g)
+                        g[num-start, idx_node] = 1/self.V[idx_node]
+                if block_PR is not None:
+                    block_PR = np.concatenate([block_PR, self.block_process(self.PR, g, self.p)], axis=0)
                 else:
-                    block_PR = np.concatenate([block_PR, self.block_process(self.PR, g)], axis=0)
+                    block_PR = self.block_process(self.PR, g, self.p)
             self.PR = block_PR
+            print("iter %3d finish" % i)
         self.out_res()
 
     def out_res(self):
@@ -67,10 +68,12 @@ class Pagerank:
             top_id.append(self.nodes[idx])
         print(top_id)
     @staticmethod
-    def block_process(PR, graph):
-        return np.dot(graph, PR)
+    def block_process(PR, graph, p):
+        res = p*np.dot(graph, PR)
+        return np.ones(res.size) * (1-p)/PR.size + res
 
 
 if __name__ == '__main__':
     p = Pagerank(100, 1000)
     p.block_cal_PR()
+    # p.cal_PR()
