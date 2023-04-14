@@ -20,6 +20,7 @@ class Graph:
                     node_list.append(n2)
                 edge_pair_list.append((n1, n2))
         node_list = sorted(node_list)
+        edge_pair_list = list(set(edge_pair_list))
         return node_list, edge_pair_list
 
     @staticmethod
@@ -28,13 +29,11 @@ class Graph:
         in_degree_map = {}
         for n1, n2 in edges:
             if n1 in out_degree_map:
-                if n2 not in out_degree_map[n1]:
-                    out_degree_map[n1].append(n2)
+                out_degree_map[n1].append(n2)
             else:
                 out_degree_map[n1] = [n2]
             if n2 in in_degree_map:
-                if n1 not in in_degree_map[n2]:
-                    in_degree_map[n2].append(n1)
+                in_degree_map[n2].append(n1)
             else:
                 in_degree_map[n2] = [n1]
         for node in nodes:
