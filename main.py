@@ -79,6 +79,5 @@ class Pagerank:
 
 if __name__ == '__main__':
     p = Pagerank()
-    # p.cal_PR()
-    p.block_cal_PR(10000)
+    p.block_cal_PR(int(input("block-size: ")))
 
