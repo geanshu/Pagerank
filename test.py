@@ -10,7 +10,7 @@ if __name__ == '__main__':
 
     G = nx.DiGraph()
     G.add_edges_from(edges)
-    pagerank_list = nx.pagerank(G, alpha=0.85, max_iter=1000)
+    pagerank_list = nx.pagerank(G, alpha=0.85, max_iter=100)
 
     res = sorted(pagerank_list.items(), key=lambda e: e[1], reverse=True)[:100]
     for d in res:

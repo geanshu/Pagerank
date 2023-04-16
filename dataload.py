@@ -37,8 +37,8 @@ class Graph:
             else:
                 in_degree_map[n2] = [n1]
         for node in nodes:
-            if node not in out_degree_map:
-                out_degree_map[node] = []
             if node not in in_degree_map:
                 in_degree_map[node] = []
+            if node not in out_degree_map:
+                out_degree_map[node] = []
         return in_degree_map, out_degree_map
