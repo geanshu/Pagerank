@@ -8,51 +8,63 @@ class Pagerank:
         self.alpha = alpha
         self.max_iter = max_iter
 
-        self.graph = Graph()
-        self.N = self.graph.N
-        self.nodes = self.graph.nodes
-        self.PR = [1.0/self.N] * self.N
-        self.PR_init()
-
-    def PR_init(self):
-        self.V = [0] * self.N  # 节点出度数量
-        for i in range(self.graph.N):
-            node = self.graph.nodes[i]
-            self.V[i] = len(self.graph.out_degree[node])
-
+        graph = Graph()
+        self.N = graph.N
+        self.nodes = graph.nodes
+        self.PR = [1.0 / self.N] * self.N
         self.dead_nodes = []
-        for idx, d in enumerate(self.V):
-            if d == 0:
-                self.dead_nodes.append(idx)
-
-        self.in_degree = []
+        self.out_degree = dict()
         for i in range(self.N):
-            in_d = self.graph.in_degree[self.nodes[i]]
-            for j in range(len(in_d)):
-                in_d[j] = self.nodes.index(in_d[j])
-            self.in_degree.append(in_d)
-        del self.graph
+            out_d = graph.out_degree[self.nodes[i]]
+            for j in range(len(out_d)):
+                out_d[j] = self.nodes.index(out_d[j])
+            self.out_degree[i] = (len(out_d), out_d)
+            if len(out_d) == 0:
+                self.dead_nodes.append(i)
 
-    @staticmethod
-    def PR_iter(V, in_degree, PR, dead_nodes, alpha=0.85):
-        loss = 0
-        N = len(PR)
-        dead_node_sum = alpha * sum(PR[n] for n in dead_nodes) / N
-        new_PR = [(1 - alpha) / N + dead_node_sum] * N
-        for i in range(N):
-            for e in in_degree[i]:
-                node = e
-                new_PR[i] += alpha * PR[node] / V[node]
-            loss += abs(PR[i] - new_PR[i])
-        return new_PR, loss
+    def block_process(self, block_size):
+        block_list = []
+        for i in range(math.ceil(self.N / block_size)):
+            start, end = i * block_size, min(self.N, (i + 1) * block_size)
+            block = dict()
+            for src, (d, out_d) in self.out_degree.items():
+                block_d = list(filter(lambda x: start <= x < end, out_d))
+                if len(block_d) > 0:
+                    block[src] = (d, block_d)
+            block_list.append(block)
+        return block_list
 
-    def cal_PR(self):
+    def block_cal_PR(self, block_size=1000):
+        if block_size < self.N:
+            block_list = self.block_process(block_size)
+        else:
+            block_list = [self.out_degree]
         for i in range(self.max_iter):
-            self.PR, loss = self.PR_iter(self.V, self.in_degree, self.PR, self.dead_nodes, self.alpha)
+            new_PR = []
+            loss = 0
+            for block_id, block in enumerate(block_list):
+                start, end = block_id * block_size, min(self.N, (block_id + 1) * block_size)
+                block_PR, block_loss = self.block_iter(self.PR, block, self.dead_nodes, start, end, self.alpha)
+                new_PR += block_PR
+                loss += block_loss
+            self.PR = new_PR
             print("iter %2d: %f" % (i, loss))
             if loss <= 1e-6 * self.N:
                 break
         self.out_res()
+        return self.PR
+
+    def block_iter(self, PR, out_degree, dead_nodes, start, end, alpha=0.85):
+        loss = 0
+        N = len(PR)
+        dead_node_sum = alpha * sum(PR[n] for n in dead_nodes) / N
+        new_PR = [(1 - alpha) / N + dead_node_sum] * (end-start)
+        for src, (d, out_d) in out_degree.items():
+            for out_node in out_d:
+                new_PR[out_node-start] += alpha*PR[src]/d
+        for i in range(end-start):
+            loss += abs(new_PR[i]-PR[start+i])
+        return new_PR, loss
 
     def out_res(self):
         res = heapq.nlargest(100, enumerate(self.PR), key=lambda x: x[1])
@@ -67,5 +79,6 @@ class Pagerank:
 
 if __name__ == '__main__':
     p = Pagerank()
-    p.cal_PR()
-    # p.stripe_block()
+    # p.cal_PR()
+    p.block_cal_PR(10000)
+
