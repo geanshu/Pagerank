@@ -1,3 +1,5 @@
+from os import system, remove
+
 class Graph:
     def __init__(self, fname='Data.txt'):
         self.nodes, self.edges = self.load_data(fname)
@@ -9,16 +11,21 @@ class Graph:
     def load_data(fname):
         node_list = []
         edge_pair_list = []
-        with open(fname, 'r') as f:
-            for data in f.readlines():
-                data = data.strip('\n').split(' ')
-                n1 = int(data[0])
-                n2 = int(data[1])
-                if n1 not in node_list:
-                    node_list.append(n1)
-                if n2 not in node_list:
-                    node_list.append(n2)
-                edge_pair_list.append((n1, n2))
+        try:
+            with open(fname, 'r') as f:
+                for data in f.readlines():
+                    data = data.strip('\n').split(' ')
+                    n1 = int(data[0])
+                    n2 = int(data[1])
+                    if n1 not in node_list:
+                        node_list.append(n1)
+                    if n2 not in node_list:
+                        node_list.append(n2)
+                    edge_pair_list.append((n1, n2))
+        except Exception as e:
+            print('Data not found. Please put Data.txt into the current folder')
+            system("pause")
+
         node_list = sorted(node_list)
         edge_pair_list = list(set(edge_pair_list))
         return node_list, edge_pair_list
